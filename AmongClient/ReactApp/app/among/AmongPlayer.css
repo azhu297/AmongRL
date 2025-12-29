@@ -27,9 +27,9 @@
 }
 
 .game-button {
-    width: 220px;
+    width: 280px;
     padding: 12px 0;
-    font-size: 1.05rem;
+    font-size: 20pt !important;
     border-radius: 8px;
 
     /* FORCE colors so MUI doesn't override them */
@@ -37,7 +37,7 @@
     color: #ffffff !important;
 
     font-weight: 600;
-    text-transform: none;
+    text-transform: none !important;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
