@@ -27,7 +27,7 @@ const AmongPlayer: React.FC = () => {
   useEffect(() => {
     if (!started) return;
     
-    socketRef.current = new WebSocket(`wss://localhost:7111/ws/among`);
+    socketRef.current = new WebSocket(`wss://${import.meta.env.VITE_SERVER_URL}/ws/among`);
     socketRef.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
 
