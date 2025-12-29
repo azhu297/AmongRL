@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace AmongServer.Controllers;
 
 [ApiController]
-[Route("ws/among")]
+[Route("api/ws/among")]
 public class AmongWebSocketController : ControllerBase
 {
     // Thread-safe collection of connected players
