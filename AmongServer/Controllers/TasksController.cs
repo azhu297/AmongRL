@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AmongServer.Controllers;
@@ -61,5 +62,33 @@ public class TasksController : ControllerBase
             .ToList();
 
         return Ok(randomTasks);
+    }
+    
+    [HttpGet("random")]
+    public IActionResult GetRandomTasks([FromQuery] int times = 1)
+    {
+        if (times <= 0) return BadRequest("Query parameter 'times' must be greater than 0.");
+
+        var random = Random.Shared;
+        var sb = new StringBuilder();
+
+        for (int i = 0; i < times; i++)
+        {
+            var randomSix = Tasks
+                .OrderBy(_ => random.Next())
+                .Take(6);
+
+            foreach (var task in randomSix)
+            {
+                sb.AppendLine(task);
+            }
+
+            if (i < times - 1)
+            {
+                sb.AppendLine(); // empty line between blocks
+            }
+        }
+
+        return Content(sb.ToString(), "text/plain");
     }
 }
