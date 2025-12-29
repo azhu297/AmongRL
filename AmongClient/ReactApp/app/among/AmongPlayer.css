@@ -1,0 +1,79 @@
+﻿/* Full page center */
+.page {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle at top, #16213e, #0b132b);
+    font-family: system-ui, sans-serif;
+}
+
+/* Main screen/card */
+.game-screen {
+    background: #0f172a; /* dark blue */
+    padding: 3rem 4rem;
+    border-radius: 14px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    min-width: 300px;
+    text-align: center;
+}
+
+/* Button container */
+.button-group {
+    display: flex;
+    flex-direction: column; /* stack vertically */
+    gap: 1rem;
+    align-items: center;
+}
+
+.game-button {
+    width: 220px;
+    padding: 12px 0;
+    font-size: 1.05rem;
+    border-radius: 8px;
+
+    /* FORCE colors so MUI doesn't override them */
+    background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+    color: #ffffff !important;
+
+    font-weight: 600;
+    text-transform: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Hover */
+.game-button:hover {
+    background: linear-gradient(135deg, #1e40af, #1e3a8a) !important;
+    color: #ffffff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.4);
+}
+
+/* Disabled state (future-proof) */
+.game-button.Mui-disabled {
+    background: #1e3a8a !important;
+    color: #c7d2fe !important;
+}
+
+/* Blinking red border for active meetings */
+@keyframes blinkBorder {
+    0% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8);
+    }
+    50% {
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, 1);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8);
+    }
+}
+
+.meeting-active {
+    animation: blinkBorder 1.2s infinite;
+    border-radius: 14px;
+}
+
+.meeting-text {
+    color: rgba(239, 68, 68, 0.8);
+}
+
