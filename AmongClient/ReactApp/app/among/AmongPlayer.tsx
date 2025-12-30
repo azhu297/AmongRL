@@ -91,10 +91,10 @@ const AmongPlayer: React.FC = () => {
   
   const playKill = () => {
     setGameState(prevState => { return {...prevState, killCooldownUntil: new Date(Date.now() + settings.killCooldownSeconds)}});
-    const audio = new Audio("/sounds/knife.mp3");
-    audio.play().catch(err => {
-      console.error("Failed to play sound:", err);
-    });
+    // const audio = new Audio("/sounds/knife.mp3");
+    // audio.play().catch(err => {
+    //   console.error("Failed to play sound:", err);
+    // });
     navigator.vibrate(400);
   }
 
@@ -151,7 +151,7 @@ const AmongPlayer: React.FC = () => {
               Report Body
             </Button>
             <Button className="game-button" onClick={playKill} disabled={gameState.state === "MEETING" || (gameState.killCooldownUntil?.getTime() ?? 0) > Date.now()}>
-              Kill 🔊
+              Kill
             </Button>
           </div>
         )}
