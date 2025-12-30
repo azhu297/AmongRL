@@ -10,6 +10,8 @@ namespace AmongServer.Controllers;
 [Route("ws/among")]
 public class AmongWebSocketController : ControllerBase
 {
+    private static DateTimeOffset? Since = null;
+    private static bool IsMeeting = false;
     // Thread-safe collection of connected players
     private static readonly ConcurrentDictionary<Guid, WebSocket> Connections = new();
 
@@ -29,6 +31,17 @@ public class AmongWebSocketController : ControllerBase
 
         try
         {
+            var json = JsonSerializer.Serialize(new {
+                type = IsMeeting ? "MEETING" : "START_PLAYING",
+                since = Since,
+            });
+            var bytes = Encoding.UTF8.GetBytes(json);
+            await socket.SendAsync(
+                new ArraySegment<byte>(bytes),
+                WebSocketMessageType.Text,
+                true,
+                CancellationToken.None
+            ); 
             await HandleConnection(connectionId, socket);
         }
         finally
@@ -57,11 +70,23 @@ public class AmongWebSocketController : ControllerBase
             using var doc = JsonDocument.Parse(json);
             var type = doc.RootElement.GetProperty("type").GetString();
 
-            if (type == "REPORT_BODY")
-            {
+            if (type == "REPORT_BODY") {
+                Since = DateTimeOffset.UtcNow;
+                IsMeeting = true;
                 await BroadcastAsync(new
                 {
-                    type = "MEETING"
+                    type = "MEETING",
+                    since = DateTimeOffset.UtcNow,
+                });
+            }
+
+            if (type == "START_PLAYING") {
+                Since = DateTimeOffset.UtcNow;
+                IsMeeting = false;
+                await BroadcastAsync(new
+                {
+                    type = "START_PLAYING",
+                    since = DateTimeOffset.UtcNow,
                 });
             }
         }

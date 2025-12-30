@@ -15,11 +15,12 @@
     border-radius: 14px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
     min-width: 300px;
+    max-width: 90vw;
     text-align: center;
 }
 
-/* Button container */
-.button-group {
+/* Container */
+.vertical-container {
     display: flex;
     flex-direction: column; /* stack vertically */
     gap: 1rem;
@@ -74,6 +75,75 @@
 }
 
 .meeting-text {
+    font-size: 20pt;
     color: rgba(239, 68, 68, 0.8);
 }
 
+.playing-text {
+    font-size: 20pt;
+    color: rgba(84, 106, 223, 0.8);
+}
+
+.confirm-dialog-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 2rem;
+}
+
+/* Dialog card (same as game-screen) */
+.confirm-dialog {
+    background: #0f172a; /* dark blue */
+    padding: 3rem 4rem;
+    border-radius: 14px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+
+    min-width: 300px;
+    max-width: 90vw;
+
+    text-align: center;
+    font-family: system-ui, sans-serif;
+}
+
+/* ================================
+   TEXT STYLES
+================================ */
+
+.confirm-dialog-title {
+    font-size: 22pt;
+    font-weight: 600;
+    color: #080827;
+    margin-bottom: 1rem;
+}
+
+.confirm-dialog-text {
+    font-size: 20pt;
+    color: rgba(44, 65, 117, 0.8);
+    margin-bottom: 2rem;
+}
+
+/* ================================
+   ACTIONS
+================================ */
+
+.confirm-dialog-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+}
+
+/* Buttons reuse your game-button style */
+.confirm-dialog-actions .game-button {
+    width: 280px;
+}
+
+/* Cancel button override */
+.confirm-cancel {
+    background: rgba(96, 112, 126, 0.8) !important;
+}
+
+/* Confirm (danger) button override */
+.confirm-accept {
+    background: linear-gradient(135deg, #1e416e, #991b1b) !important;
+}

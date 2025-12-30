@@ -12,19 +12,20 @@ interface GameState {
 interface Settings {
   killCooldownSeconds: number,
   taskCount: number,
+  meetingTimeSeconds: number,
 }
 
-const AmongPlayer: React.FC = () => {
+const Meeting: React.FC = () => {
   const socketRef = useRef<WebSocket | null>(null);
   const [started, setStarted] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [gameState, setGameState] = useState<GameState>({ state: "PLAYING" });
-  const [settings, setSettings] = useState<Settings>({ killCooldownSeconds: 60, taskCount: 6 });
+  const [gameState, setGameState] = useState<GameState>({state: "PLAYING"});
+  const [settings, setSettings] = useState<Settings>({killCooldownSeconds: 60, taskCount: 6, meetingTimeSeconds: 120});
 
   // One-time user interaction to unlock audio and start the game
   const start = () => {
     const audio = new Audio("/sounds/knife.mp3");
-    
+
     // Play silently to unlock
     audio.volume = 0;
     audio.play()
@@ -45,7 +46,9 @@ const AmongPlayer: React.FC = () => {
       const data = JSON.parse(event.data);
 
       if (data.type === "MEETING") {
-        setGameState(prev => { return { state: "MEETING", since: new Date(data.since), killCooldownUntil: undefined }})
+        setGameState(prev => {
+          return {state: data.type, since: new Date(data.since), killCooldownUntil: undefined}
+        })
 
         if (!meetingAudioRef.current) {
           meetingAudioRef.current = new Audio("/sounds/meeting_alarm.wav");
@@ -58,17 +61,27 @@ const AmongPlayer: React.FC = () => {
       }
 
       if (data.type === "START_PLAYING") {
-        setGameState(prev => { return { state: "PLAYING", since: new Date(data.since), killCooldownUntil: new Date(new Date(data.since).getTime() + settings.killCooldownSeconds) }})
+        setGameState(prev => {
+          return {
+            state: "PLAYING",
+            since: new Date(data.since),
+            killCooldownUntil: new Date(new Date(data.since).getTime() + settings.killCooldownSeconds)
+          }
+        })
       }
-      
+
       if (data.type === "SETTINGS") {
-        setSettings({ killCooldownSeconds: data.killCooldownSeconds, taskCount: data.taskCount });
+        setSettings({
+          killCooldownSeconds: data.killCooldownSeconds,
+          taskCount: data.taskCount,
+          meetingTimeSeconds: data.meetingTimeSeconds
+        });
       }
     };
 
     socketRef.current.onerror = console.error;
   }
-  
+
   useEffect(() => {
     if (!started) return;
     connectWebsocket();
@@ -87,53 +100,41 @@ const AmongPlayer: React.FC = () => {
     };
   }, [started]);
 
-
-  
-  const playKill = () => {
-    setGameState(prevState => { return {...prevState, killCooldownUntil: new Date(Date.now() + settings.killCooldownSeconds)}});
-    const audio = new Audio("/sounds/knife.mp3");
-    audio.play().catch(err => {
-      console.error("Failed to play sound:", err);
-    });
-    navigator.vibrate(400);
-  }
-
-  const handleConfirm = () => {
-    setConfirmDialogOpen(false);
-    reportBody();
-  };
-
-  const handleCancel = () => {
-    setConfirmDialogOpen(false);
-  };
-  
-  const reportBody = () => {
-    const sendData = { type: "REPORT_BODY" };
+  const startPlaying = () => {
+    const sendData = {type: "START_PLAYING"};
     const dataString = JSON.stringify(sendData);
     socketRef.current?.send(dataString);
   }
 
-  const [secondsSince, setSecondsSince] = useState<number | "ERROR">("ERROR");
+
+  const reportBody = () => {
+    const sendData = {type: "REPORT_BODY"};
+    const dataString = JSON.stringify(sendData);
+    socketRef.current?.send(dataString);
+  }
+
+  const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
-    if (!gameState.since) {
-      setSecondsSince("ERROR");
-      return;
-    }
-    
-    const update = () => {
-      console.log("Updating second since!")
-      setSecondsSince(
-        Math.floor((Date.now() - gameState.since!.getTime()) / 1000)
-      );
-    };
+    const id = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
 
-    update(); // initial update
-    const interval = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, []);
 
-    return () => clearInterval(interval);
-  }, [gameState.since]);
-  
+  const secondsSince =
+    gameState.since != null
+      ? Math.floor(
+        (now - new Date(gameState.since).getTime()) / 1000
+      )
+      : "ERROR";
+
+  const meetingUntil =
+    secondsSince !== "ERROR"
+      ? Math.max(0, 120 - secondsSince)
+      : "ERROR";
+
   return (
     <div className="page">
       <div className={`game-screen ${gameState.state === "MEETING" ? "meeting-active" : ""}`}>
@@ -145,50 +146,23 @@ const AmongPlayer: React.FC = () => {
 
         {started && (
           <div className="vertical-container">
-            {gameState.state === "MEETING" && <p className="meeting-text">Body found {secondsSince} seconds ago! Go to the meeting!</p>}
+            {gameState.state === "MEETING" &&
+              <p className="meeting-text">Body found {secondsSince} seconds ago! Meeting over
+                in {meetingUntil} seconds!</p>}
             {gameState.state === "PLAYING" && <p className="playing-text">Playing since {secondsSince} seconds.</p>}
-            <Button className="game-button" onClick={() => setConfirmDialogOpen(true)}>
-              Report Body
+
+            <Button className="game-button" onClick={() => startPlaying()}>
+              Start Playing
             </Button>
-            <Button className="game-button" onClick={playKill} disabled={gameState.state === "MEETING" || (gameState.killCooldownUntil?.getTime() ?? 0) > Date.now()}>
-              Kill 🔊
+            <Button className="game-button" onClick={() => reportBody()}>
+              Call Meeting
             </Button>
+
           </div>
         )}
       </div>
-
-      <Dialog
-        open={confirmDialogOpen}
-        onClose={handleCancel}
-        slotProps={{
-          paper: { className: "confirm-dialog"}
-        }}
-        className="confirm-dialog-container"
-      >
-        <DialogTitle className="confirm-dialog-title">
-          Are you sure you want to report a body?
-        </DialogTitle>
-
-        <DialogActions className="confirm-dialog-actions">
-          <Button
-            onClick={handleCancel}
-            className="game-button confirm-cancel"
-          >
-            Cancel
-          </Button>
-
-          <Button
-            onClick={handleConfirm}
-            autoFocus
-            className="game-button confirm-accept"
-          >
-            Confirm
-          </Button>
-        </DialogActions>
-      </Dialog>
-
     </div>
   );
 }
 
-export default AmongPlayer;
+export default Meeting;
