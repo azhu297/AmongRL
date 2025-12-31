@@ -52,7 +52,7 @@
 
 /* Disabled state (future-proof) */
 .game-button.Mui-disabled {
-    background: #1e3a8a !important;
+    background: #505e6a !important;
     color: #c7d2fe !important;
 }
 

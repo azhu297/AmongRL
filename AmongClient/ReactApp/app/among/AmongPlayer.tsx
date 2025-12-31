@@ -19,7 +19,7 @@ const AmongPlayer: React.FC = () => {
   const [started, setStarted] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [gameState, setGameState] = useState<GameState>({ state: "PLAYING" });
-  const [settings, setSettings] = useState<Settings>({ killCooldownSeconds: 60, taskCount: 6 });
+  const [settings, setSettings] = useState<Settings>({ killCooldownSeconds: 45, taskCount: 6 });
 
   // One-time user interaction to unlock audio and start the game
   const start = () => {
@@ -58,7 +58,7 @@ const AmongPlayer: React.FC = () => {
       }
 
       if (data.type === "START_PLAYING") {
-        setGameState(prev => { return { state: "PLAYING", since: new Date(data.since), killCooldownUntil: new Date(new Date(data.since).getTime() + settings.killCooldownSeconds) }})
+        setGameState(prev => { return { state: "PLAYING", since: new Date(data.since), killCooldownUntil: new Date(new Date(data.since).getTime() + settings.killCooldownSeconds * 1000) }})
       }
       
       if (data.type === "SETTINGS") {
@@ -90,7 +90,7 @@ const AmongPlayer: React.FC = () => {
 
   
   const playKill = () => {
-    setGameState(prevState => { return {...prevState, killCooldownUntil: new Date(Date.now() + settings.killCooldownSeconds)}});
+    setGameState(prevState => { return {...prevState, killCooldownUntil: new Date(Date.now() + settings.killCooldownSeconds * 1000)}});
     // const audio = new Audio("/sounds/knife.mp3");
     // audio.play().catch(err => {
     //   console.error("Failed to play sound:", err);
@@ -150,8 +150,8 @@ const AmongPlayer: React.FC = () => {
             <Button className="game-button" onClick={() => setConfirmDialogOpen(true)}>
               Report Body
             </Button>
-            <Button className="game-button" onClick={playKill} disabled={gameState.state === "MEETING" || (gameState.killCooldownUntil?.getTime() ?? 0) > Date.now()}>
-              Kill
+            <Button className="game-button" onClick={playKill} disabled={gameState.state === "MEETING" || (!gameState.killCooldownUntil?.getTime() ? false : gameState.killCooldownUntil!.getTime() > Date.now())}>
+              Kill - {(gameState.killCooldownUntil?.getTime() ?? 0) < Date.now() ? `Start Cooldown ${settings.killCooldownSeconds}` : `Cooldown ${Math.floor((gameState.killCooldownUntil!.getTime()! - Date.now()) / 1000)}`}
             </Button>
           </div>
         )}
